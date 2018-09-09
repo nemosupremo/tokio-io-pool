@@ -174,9 +174,9 @@ impl Builder {
         let core_ids = core_affinity::get_core_ids().unwrap();
         println!("{} cores", core_ids.len());
 
-        // for i in 0..self.nworkers {
-        for i in 0..core_ids.len() {
-            let core = core_ids[i];
+        for i in 0..self.nworkers {
+        //for i in 0..core_ids.len() {
+            let core = core_ids[i % core_ids.len()];
             let (trigger, exit) = oneshot::channel();
             let (handle_tx, handle_rx) = mpsc::sync_channel(1);
 
