@@ -74,6 +74,7 @@ extern crate futures;
 extern crate num_cpus;
 extern crate tokio;
 extern crate tokio_executor;
+extern crate core_affinity;
 
 use futures::sync::oneshot;
 use std::sync::{atomic, mpsc, Arc};
@@ -170,7 +171,12 @@ impl Builder {
 
         let mut handles = Vec::with_capacity(self.nworkers);
         let mut threads = Vec::with_capacity(self.nworkers);
-        for i in 0..self.nworkers {
+        let core_ids = core_affinity::get_core_ids().unwrap();
+        println!("{} cores", core_ids.len());
+
+        // for i in 0..self.nworkers {
+        for i in 0..core_ids.len() {
+            let core = core_ids[i];
             let (trigger, exit) = oneshot::channel();
             let (handle_tx, handle_rx) = mpsc::sync_channel(1);
 
@@ -184,6 +190,8 @@ impl Builder {
             let after = self.before_stop.clone();
 
             let jh = th.spawn(move || {
+                core_affinity::set_for_current(core);
+
                 if let Some(ref f) = before {
                     f();
                 }
@@ -298,6 +306,21 @@ impl Handle {
         F: Future<Item = (), Error = ()> + Send + 'static,
     {
         let worker = self.rri.fetch_add(1, atomic::Ordering::Relaxed) % self.workers.len();
+        self.workers[worker].spawn(future)?;
+        Ok(self)
+    }
+
+    /// Spawn a future onto a runtime in the pool. The shard denotes which thread the future will spawn on.
+    /// Shard can be any size, and will map to the current amount of workers in the pool. The same shard value
+    /// will spawn onto the same thread.
+    ///
+    /// This spawns the given future onto a single thread runtime's executor. That thread is then
+    /// responsible for polling the future until it completes.
+    pub fn spawn_on<F>(&self, shard: usize, future: F) -> Result<&Self, SpawnError>
+    where
+        F: Future<Item = (), Error = ()> + Send + 'static,
+    {
+        let worker = shard % self.workers.len();
         self.workers[worker].spawn(future)?;
         Ok(self)
     }

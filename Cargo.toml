@@ -19,7 +19,8 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "jonhoo/tokio-io-pool" }
 
 [dependencies]
-tokio = "0.1"
+tokio-async-await = { git = "https://github.com/nemosupremo/tokio", rev="019d8af" }
 futures = "0.1"
 num_cpus = "1.8"
 tokio-executor = "0.1.2"
+core_affinity = "0.5"
