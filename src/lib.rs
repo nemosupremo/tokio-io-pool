@@ -274,7 +274,8 @@ where
 /// A handle to a [`Runtime`] that allows spawning additional futures from other threads.
 #[derive(Clone)]
 pub struct Handle {
-    workers: Vec<current_thread::Handle>,
+    /// dragons
+    pub workers: Vec<current_thread::Handle>,
     rri: Arc<atomic::AtomicUsize>,
 }
 
