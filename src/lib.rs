@@ -74,7 +74,6 @@ extern crate futures;
 extern crate num_cpus;
 extern crate tokio;
 extern crate tokio_executor;
-extern crate core_affinity;
 
 use futures::sync::oneshot;
 use std::sync::{atomic, mpsc, Arc};
@@ -171,12 +170,8 @@ impl Builder {
 
         let mut handles = Vec::with_capacity(self.nworkers);
         let mut threads = Vec::with_capacity(self.nworkers);
-        let core_ids = core_affinity::get_core_ids().unwrap();
-        println!("{} cores", core_ids.len());
 
         for i in 0..self.nworkers {
-        //for i in 0..core_ids.len() {
-            let core = core_ids[i % core_ids.len()];
             let (trigger, exit) = oneshot::channel();
             let (handle_tx, handle_rx) = mpsc::sync_channel(1);
 
@@ -190,8 +185,6 @@ impl Builder {
             let after = self.before_stop.clone();
 
             let jh = th.spawn(move || {
-                core_affinity::set_for_current(core);
-
                 if let Some(ref f) = before {
                     f();
                 }
