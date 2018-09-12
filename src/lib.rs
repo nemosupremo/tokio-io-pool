@@ -306,7 +306,7 @@ impl Handle {
 
     /// Spawn a future onto a runtime in the pool. The shard denotes which thread the future will spawn on.
     /// Shard can be any size, and will map to the current amount of workers in the pool. The same shard value
-    /// will spawn onto the same thread.
+    /// will spawn onto the same worker.
     ///
     /// This spawns the given future onto a single thread runtime's executor. That thread is then
     /// responsible for polling the future until it completes.
@@ -335,6 +335,18 @@ impl Handle {
             handle: self.clone(),
             stream,
         }
+    }
+
+    /// Get the worker id for the thread that will run a future spawned
+    /// with this shard. Any shard values that map to the same worker id
+    /// will be run on the same thread.
+    pub fn worker_id(&self, shard: usize) -> usize {
+        shard % self.workers.len()
+    }
+
+    /// Number of threads in the worker pool
+    pub fn size(&self) -> usize {
+        self.workers.len()
     }
 }
 
