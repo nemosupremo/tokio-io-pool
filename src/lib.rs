@@ -340,11 +340,13 @@ impl Handle {
     /// Get the worker id for the thread that will run a future spawned
     /// with this shard. Any shard values that map to the same worker id
     /// will be run on the same thread.
+    #[inline(always)]
     pub fn worker_id(&self, shard: usize) -> usize {
         shard % self.workers.len()
     }
 
     /// Number of threads in the worker pool
+    #[inline(always)]
     pub fn size(&self) -> usize {
         self.workers.len()
     }
