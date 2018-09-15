@@ -310,11 +310,11 @@ impl Handle {
     ///
     /// This spawns the given future onto a single thread runtime's executor. That thread is then
     /// responsible for polling the future until it completes.
-    pub fn spawn_on<F>(&self, shard: usize, future: F) -> Result<&Self, SpawnError>
+    pub fn spawn_on<F>(&self, shard: u64, future: F) -> Result<&Self, SpawnError>
     where
         F: Future<Item = (), Error = ()> + Send + 'static,
     {
-        let worker = shard % self.workers.len();
+        let worker = self.worker_id(shard);
         self.workers[worker].spawn(future)?;
         Ok(self)
     }
@@ -341,8 +341,8 @@ impl Handle {
     /// with this shard. Any shard values that map to the same worker id
     /// will be run on the same thread.
     #[inline(always)]
-    pub fn worker_id(&self, shard: usize) -> usize {
-        shard % self.workers.len()
+    pub fn worker_id(&self, shard: u64) -> usize {
+        (shard as usize) % self.workers.len()
     }
 
     /// Number of threads in the worker pool
