@@ -303,7 +303,7 @@ impl Handle {
     /// responsible for polling the future until it completes.
     pub fn spawn_on<F>(&self, shard: u64, future: F) -> Result<&Self, SpawnError>
     where
-        F: Future<Item = (), Error = ()> + Send + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         let worker = self.worker_id(shard);
         self.workers[worker].spawn(future)?;
